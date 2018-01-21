@@ -1,8 +1,46 @@
 import gym
+import numpy as np
 
-env = gym.make('CartPole-v0')
-env.reset() #initialize env.
+# hill climbing: initialize weights randomly,
+# utilizie memory to save good weights
 
-for _ in range(1000):
-    env.render()
-    env.step(env.action_space.sample())
+def run(env, parameters):
+    observation = env.reset()
+    totalreward = 0
+
+    # 200 ts
+    for _ in range(200):
+        env.render()
+
+        # init random weights
+        action = 0 if np.matmul(parameters,  observation)<0 else 1
+        observation, reward, done, info = env.step(action)
+        totalreward += reward
+        if done:
+            break
+    return totalreward
+
+def train(submit):
+    env = gym.make('CartPole-v0')
+
+    episodes_per_update = 5
+
+    # hill policy
+    noise_scaling = 0.1
+    parameters = np.random.rand(4) * 2 -1
+    bestreward = 0
+
+    # 2k ep
+    for _ in range(2000):
+        newparams = parameters + (np.random.rand(4) * 2 -1) * noise_scaling
+        reward = run(env, newparams)
+        print ("reward %d best %d" % (reward, bestreward))
+
+        if reward > bestreward:
+            bestreward = reward
+            parameters = newparams
+            if reward == 200:
+                break
+
+r = train(submit=False)
+print (r)
